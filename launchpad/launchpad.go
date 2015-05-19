@@ -15,19 +15,11 @@ type Launchpad struct {
 }
 
 func main() {
-	Initialize()
-	defer Terminate()
+
+	fmt.Println("Initalized")
 
 	launchpad := GetLaunchPad()
-	launchpad.Reset()
-}
-
-func Initialize() {
-	portmidi.Initialize()
-}
-
-func Terminate() {
-	portmidi.Terminate()
+	defer launchpad.Close()
 }
 
 func GetLaunchPad() *Launchpad {
@@ -36,7 +28,15 @@ func GetLaunchPad() *Launchpad {
 	handleError(err)
 	outputStream, err := portmidi.NewOutputStream(midiOut, 1024, 0)
 	handleError(err)
+
+	portmidi.Initialize()
 	return &Launchpad{midiIn: midiIn, midiOut: midiOut, inputStream: inputStream, outputStream: outputStream}
+}
+
+func (launchpad *Launchpad) Close() {
+	launchpad.inputStream.Close()
+	launchpad.outputStream.Close()
+	portmidi.Terminate()
 }
 
 func (launchpad *Launchpad) Reset() {
@@ -51,7 +51,6 @@ func handleError(err error) {
 func findLaunchPadMidis() (midiIn, midiOut portmidi.DeviceId) {
 	nDevices := portmidi.CountDevices()
 
-	fmt.Printf("Devices: %d\n", nDevices)
 	for i := 0; i < nDevices; i++ {
 		info := portmidi.GetDeviceInfo(portmidi.DeviceId(i))
 		if strings.HasPrefix(info.Name, "Launchpad") {
