@@ -15,6 +15,13 @@ type Launchpad struct {
 	inputStream  *portmidi.Stream
 }
 
+type Event struct {
+	Timestamp int64
+	Status    int64
+	Note      int64
+	Velocity  int64
+}
+
 func snake(launchpad *Launchpad) {
 	var r, g int
 	for on := 0; ; on++ {
@@ -44,7 +51,19 @@ func main() {
 	launchpad := GetLaunchPad()
 	launchpad.Reset()
 
-	snake(launchpad)
+	//snake(launchpad)
+	events := launchpad.Events()
+	for {
+		event := <-events
+		x, y, pressed := EventInfo(event)
+		//launchpad.outputStream.WriteShort(0x90, event.Data1, event.Data2)
+		if pressed {
+			launchpad.Led(int(x), int(y), 3, 0)
+		} else {
+			launchpad.Led(int(x), int(y), 0, 3)
+		}
+		fmt.Printf("(%d,%d): %t\n", x, y, pressed)
+	}
 
 	defer launchpad.Close()
 }
@@ -60,6 +79,19 @@ func GetLaunchPad() *Launchpad {
 	return &Launchpad{midiIn: midiIn, midiOut: midiOut, inputStream: inputStream, outputStream: outputStream}
 }
 
+func EventInfo(event portmidi.Event) (x, y int64, pressed bool) {
+	note := event.Data1
+	if event.Status == 176 {
+		y = 8
+		x = note - 104
+	} else {
+		x = note % 16
+		y = 7 - (note / 16)
+	}
+	pressed = event.Data2 == 127
+	return
+}
+
 func (launchpad *Launchpad) Close() {
 	launchpad.inputStream.Close()
 	launchpad.outputStream.Close()
@@ -69,6 +101,10 @@ func (launchpad *Launchpad) Close() {
 
 func (launchpad *Launchpad) Reset() {
 	launchpad.outputStream.WriteShort(0xb0, 0, 0)
+}
+
+func (launchpad *Launchpad) Events() <-chan portmidi.Event {
+	return launchpad.inputStream.Listen()
 }
 
 func (launchpad *Launchpad) Led(x, y, r, g int) {
