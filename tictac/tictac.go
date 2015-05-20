@@ -5,6 +5,8 @@ import (
 	"github.com/pato/gonovation/launchpad"
 )
 
+var board [3][3]int
+
 func boardOn(launchpad *gonovation.Launchpad, x, y, r, g int) {
 	if !(x < 0 || y < 0 || x == 2 || x == 5 || x == 8 || y == 2 || y == 5 || y == 8) {
 		launchpad.Led(x, y, r, g)
@@ -21,16 +23,18 @@ func processClick(launchpad *gonovation.Launchpad, x, y int64, turn int) {
 	} else if y == 8 {
 		// top buttons
 		resetBoard(launchpad)
-	} else if boardClick(x, y) {
+	} else if boardClick(x, y) && board[x/3][y/3] == 0 {
 		var r, g int
 		if turn%2 == 0 {
 			// player 1
 			r = 0
 			g = 3
+			board[x/3][y/3] = 1
 		} else {
 			//player 2
 			r = 3
 			g = 3
+			board[x/3][y/3] = 2
 		}
 		boardOn(launchpad, int(x), int(y), r, g)
 		boardOn(launchpad, int(x+1), int(y), r, g)
@@ -48,7 +52,7 @@ func processClick(launchpad *gonovation.Launchpad, x, y int64, turn int) {
 func resetBoard(launchpad *gonovation.Launchpad) {
 	launchpad.Reset()
 
-	/* Set up board */
+	/* Set up launchpad board */
 	for x := 0; x < 8; x++ {
 		for y := 0; y < 8; y++ {
 			if x == 2 || x == 5 || y == 2 || y == 5 {
@@ -56,6 +60,38 @@ func resetBoard(launchpad *gonovation.Launchpad) {
 			}
 		}
 	}
+
+	/* Set up logical board */
+	for x := 0; x < 3; x++ {
+		for y := 0; y < 3; y++ {
+			board[x][y] = 0
+		}
+	}
+}
+
+func checkHorizontal(line int) bool {
+	return board[0][line] == board[1][line] && board[1][line] == board[2][line] && board[0][line] != 0
+}
+
+func checkVertical(line int) bool {
+	return board[line][0] == board[line][1] && board[line][1] == board[line][2] && board[line][0] != 0
+}
+
+func getWinner() (bool, int) {
+	for i := 0; i < 3; i++ {
+		if checkHorizontal(i) {
+			return true, board[0][i]
+		}
+		if checkVertical(0) {
+			return true, board[i][0]
+		}
+	}
+	if board[0][0] == board[1][1] && board[1][1] == board[2][2] && board[0][0] != 0 {
+		return true, board[0][0]
+	} else if board[0][2] == board[1][1] && board[1][1] == board[2][0] && board[0][2] != 0 {
+		return true, board[0][2]
+	}
+	return false, -1
 }
 
 func main() {
@@ -75,6 +111,13 @@ func main() {
 			processClick(launchpad, x, y, turn)
 			if boardClick(x, y) {
 				turn++
+				//				w, win := getWinner()
+				//				if w {
+				//					for i := 0; i < 8; i++ {
+				//						for j := 0; j < 8; j++ {
+				//						}
+				//					}
+				//				}
 			}
 		}
 	}
