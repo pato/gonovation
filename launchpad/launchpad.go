@@ -7,8 +7,8 @@ import (
 )
 
 type Launchpad struct {
-	midiIn       portmidi.DeviceId
-	midiOut      portmidi.DeviceId
+	midiIn       portmidi.DeviceID
+	midiOut      portmidi.DeviceID
 	outputStream *portmidi.Stream
 	inputStream  *portmidi.Stream
 }
@@ -75,16 +75,16 @@ func handleError(err error) {
 	}
 }
 
-func findLaunchPadMidis() (midiIn, midiOut portmidi.DeviceId) {
+func findLaunchPadMidis() (midiIn, midiOut portmidi.DeviceID) {
 	nDevices := portmidi.CountDevices()
 
 	for i := 0; i < nDevices; i++ {
-		info := portmidi.GetDeviceInfo(portmidi.DeviceId(i))
+		info := portmidi.Info(portmidi.DeviceID(i))
 		if strings.HasPrefix(info.Name, "Launchpad") {
 			if info.IsInputAvailable {
-				midiIn = portmidi.DeviceId(i)
+				midiIn = portmidi.DeviceID(i)
 			} else if info.IsOutputAvailable {
-				midiOut = portmidi.DeviceId(i)
+				midiOut = portmidi.DeviceID(i)
 			}
 		}
 	}
