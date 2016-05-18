@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"github.com/pato/gonovation/launchpad"
+	"time"
 )
 
 var board [3][3]int
@@ -82,7 +83,7 @@ func getWinner() (bool, int) {
 		if checkHorizontal(i) {
 			return true, board[0][i]
 		}
-		if checkVertical(0) {
+		if checkVertical(i) {
 			return true, board[i][0]
 		}
 	}
@@ -111,16 +112,35 @@ func main() {
 			processClick(launchpad, x, y, turn)
 			if boardClick(x, y) {
 				turn++
-				//				w, win := getWinner()
-				//				if w {
-				//					for i := 0; i < 8; i++ {
-				//						for j := 0; j < 8; j++ {
-				//						}
-				//					}
-				//				}
+				w, win := getWinner()
+				if w {
+					snake(launchpad, win)
+					resetBoard(launchpad)
+				}
 			}
 		}
 	}
 
 	defer launchpad.Close()
+}
+
+func snake(launchpad *gonovation.Launchpad, winner int) {
+	var r, g int
+	if winner == 1 {
+		r = 0
+		g = 3
+	} else {
+		r = 3
+		g = 3
+	}
+	for x := 0; x <= 8; x++ {
+		for y := 0; y <= 8; y++ {
+			if x%2 == 0 {
+				launchpad.Led(x, y, r, g)
+			} else {
+				launchpad.Led(x, 8-y, r, g)
+			}
+			time.Sleep(30 * time.Millisecond)
+		}
+	}
 }
