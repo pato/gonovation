@@ -36,10 +36,13 @@ For reference see `demo/demo.go`
 
 A silly demo where you can play a game of tic tac toe on the board!
 
+![tictactoe](http://plankenau/i/tctcte.gif)
 
 ### Demo
 
 Simple demo for listening to key presses and setting colors programmatically
+
+![demo](http://plankenau/i/dmo.gif)
 
 
 ## Installing
